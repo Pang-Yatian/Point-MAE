@@ -49,16 +49,17 @@ def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--model', type=str, default='pt', help='model name')
     parser.add_argument('--batch_size', type=int, default=16, help='batch Size during training')
-    parser.add_argument('--epoch', default=100, type=int, help='epoch to run')
-    parser.add_argument('--learning_rate', default=0.00025, type=float, help='initial learning rate')
+    parser.add_argument('--epoch', default=300, type=int, help='epoch to run')
+    parser.add_argument('--warmup_epoch', default=10, type=int, help='warmup epoch')
+    parser.add_argument('--learning_rate', default=0.0002, type=float, help='initial learning rate')
     parser.add_argument('--gpu', type=str, default='0', help='specify GPU devices')
-    parser.add_argument('--optimizer', type=str, default='AdamW', help='Adam or SGD')
+    # parser.add_argument('--optimizer', type=str, default='AdamW', help='Adam or SGD')
     parser.add_argument('--log_dir', type=str, default='./exp', help='log path')
-    parser.add_argument('--decay_rate', type=float, default=1e-4, help='weight decay')
+    # parser.add_argument('--decay_rate', type=float, default=1e-4, help='weight decay')
     parser.add_argument('--npoint', type=int, default=2048, help='point Number')
     parser.add_argument('--normal', action='store_true', default=False, help='use normals')
-    parser.add_argument('--step_size', type=int, default=20, help='decay step for lr decay')
-    parser.add_argument('--lr_decay', type=float, default=0.5, help='decay rate for lr decay')
+    # parser.add_argument('--step_size', type=int, default=20, help='decay step for lr decay')
+    # parser.add_argument('--lr_decay', type=float, default=0.5, help='decay rate for lr decay')
     parser.add_argument('--ckpts', type=str, default='../best/pretrain/m0.6R_1_pretrain300.pth', help='ckpts')
     parser.add_argument('--root', type=str, default='../data/shapenetcore_partanno_segmentation_benchmark_v0_normal/', help='data root')
     return parser.parse_args()
@@ -126,42 +127,32 @@ def main(args):
     if args.ckpts is not None:
         classifier.load_model_from_ckpt(args.ckpts)
 
-    if args.optimizer == 'Adam':
-        optimizer = torch.optim.Adam(
-            classifier.parameters(),
-            lr=args.learning_rate,
-            betas=(0.9, 0.999),
-            eps=1e-08,
-            weight_decay=args.decay_rate
-        )
-    elif args.optimizer == 'AdamW':
-            def add_weight_decay(model, weight_decay=1e-5, skip_list=()):
-                decay = []
-                no_decay = []
-                for name, param in model.named_parameters():
-                    if not param.requires_grad:
-                        continue  # frozen weights
-                    if len(param.shape) == 1 or name.endswith(".bias") or 'token' in name or name in skip_list:
+## we use adamw and cosine scheduler
+    def add_weight_decay(model, weight_decay=1e-5, skip_list=()):
+        decay = []
+        no_decay = []
+        for name, param in model.named_parameters():
+            if not param.requires_grad:
+                continue  # frozen weights
+            if len(param.shape) == 1 or name.endswith(".bias") or 'token' in name or name in skip_list:
                         # print(name)
-                        no_decay.append(param)
-                    else:
-                        decay.append(param)
-                return [
+                no_decay.append(param)
+            else:
+                decay.append(param)
+        return [
                     {'params': no_decay, 'weight_decay': 0.},
                     {'params': decay, 'weight_decay': weight_decay}]
 
-            param_groups = add_weight_decay(classifier, weight_decay=0.05)
-            optimizer = optim.AdamW(param_groups, lr= args.learning_rate, weight_decay=0.05 )
-    else:
-        optimizer = torch.optim.SGD(classifier.parameters(), lr=args.learning_rate, momentum=0.9)
+    param_groups = add_weight_decay(classifier, weight_decay=0.05)
+    optimizer = optim.AdamW(param_groups, lr= args.learning_rate, weight_decay=0.05 )
 
     scheduler = CosineLRScheduler(optimizer,
-                                  t_initial=100,
+                                  t_initial=args.epoch,
                                   t_mul=1,
                                   lr_min=1e-6,
                                   decay_rate=0.1,
                                   warmup_lr_init=1e-6,
-                                  warmup_t=10,
+                                  warmup_t=args.warmup_epoch,
                                   cycle_limit=1,
                                   t_in_epochs=True)
 
