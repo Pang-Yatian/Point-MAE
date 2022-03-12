@@ -25,7 +25,7 @@ The overall directory structure should be:
 │  ├── modelnet40_train_8192pts_fps.dat
 │  ├── modelnet40_test_8192pts_fps.dat
 ```
-Download: 
+Download: You can download the processed data from [Point-BERT repo](https://github.com/lulutang0608/Point-BERT/blob/49e2c7407d351ce8fe65764bbddd5d9c0e0a4c52/DATASET.md), or download from the [official website](https://modelnet.cs.princeton.edu/#) and process it by yourself.
 
 ### ModelNet Few-shot Dataset:
 ```
@@ -42,7 +42,7 @@ Download:
 │  ├── ...
 ```
 
-Download:
+Download: Please download the data from [Point-BERT repo](https://github.com/lulutang0608/Point-BERT/blob/49e2c7407d351ce8fe65764bbddd5d9c0e0a4c52/DATASET.md). We use the same data split as theirs.
 
 ### ScanObjectNN Dataset:
 ```
@@ -56,7 +56,7 @@ Download:
 │  ├── training_objectdataset.h5
 │  ├── test_objectdataset.h5
 ```
-Download:
+Download: Please download the data from the [official website](https://hkust-vgd.github.io/scanobjectnn/).
 
 ### ShapeNet55/34 Dataset:
 
@@ -71,7 +71,7 @@ Download:
 │  └── test.txt
 ```
 
-Download:
+Download: Please download the data from [Point-BERT repo](https://github.com/lulutang0608/Point-BERT/blob/49e2c7407d351ce8fe65764bbddd5d9c0e0a4c52/DATASET.md).
 
 ### ShapeNetPart Dataset:
 
@@ -85,4 +85,4 @@ Download:
 │──synsetoffset2category.txt
 ```
 
-Download:
+Download: Please download the data from [here](https://shapenet.cs.stanford.edu/media/shapenetcore_partanno_segmentation_benchmark_v0_normal.zip). 
