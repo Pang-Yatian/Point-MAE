@@ -1,6 +1,6 @@
 # Point-MAE
 
-## Implementation for paper: Masked Autoencoders for Point Cloud Self-supervised Learning
+## Masked Autoencoders for Point Cloud Self-supervised Learning, [arxiv](https://arxiv.org/abs/2203.06604)
 
 In this work, we present a novel scheme of masked autoencoders for point cloud self-supervised learning, termed as Point-MAE. Our Point-MAE is neat and efficient, with minimal modifications based on the properties of the point cloud. In classification tasks, Point-MAE outperforms all the other self-supervised learning methods on ScanObjectNN and ModelNet40. Point-MAE also advances state-of-the-art accuracies by 1.5%-2.3% in the few-shot learning on ModelNet40. 
 
@@ -101,3 +101,14 @@ python main_vis.py --test --ckpts <path/to/pre-trained/model> --config cfgs/pret
 Our codes are built upon [Point-BERT](https://github.com/lulutang0608/Point-BERT), [Pointnet2_PyTorch](https://github.com/erikwijmans/Pointnet2_PyTorch) and [Pointnet_Pointnet2_pytorch](https://github.com/yanx27/Pointnet_Pointnet2_pytorch)
 
 ## Reference
+
+```
+@misc{pang2022masked,
+    title={Masked Autoencoders for Point Cloud Self-supervised Learning},
+    author={Yatian Pang and Wenxiao Wang and Francis E. H. Tay and Wei Liu and Yonghong Tian and Li Yuan},
+    year={2022},
+    eprint={2203.06604},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
+```
