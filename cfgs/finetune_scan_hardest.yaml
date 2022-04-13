@@ -8,7 +8,7 @@ optimizer : {
 scheduler: {
   type: CosLR,
   kwargs: {
-    epochs: 200,
+    epochs: 300,
     initial_epochs : 10
 }}
 
@@ -35,5 +35,5 @@ model : {
 npoints: 2048
 total_bs : 32
 step_per_update : 1
-max_epoch : 200
+max_epoch : 300
 grad_norm_clip : 10
