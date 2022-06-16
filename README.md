@@ -12,7 +12,7 @@ In this work, we present a novel scheme of masked autoencoders for point cloud s
 </div>
 
 ## 1. Requirements
-PyTorch >= 1.7.0;
+PyTorch >= 1.7.0 < 1.11.0;
 python >= 3.7;
 CUDA >= 9.0;
 GCC >= 4.9;
