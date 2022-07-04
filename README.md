@@ -1,6 +1,6 @@
 # Point-MAE
 
-## Masked Autoencoders for Point Cloud Self-supervised Learning, [arxiv](https://arxiv.org/abs/2203.06604)
+## Masked Autoencoders for Point Cloud Self-supervised Learning, ECCV 2022. [ArXiv](https://arxiv.org/abs/2203.06604)
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/masked-autoencoders-for-point-cloud-self/3d-point-cloud-classification-on-scanobjectnn)](https://paperswithcode.com/sota/3d-point-cloud-classification-on-scanobjectnn?p=masked-autoencoders-for-point-cloud-self)
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/masked-autoencoders-for-point-cloud-self/3d-point-cloud-classification-on-modelnet40)](https://paperswithcode.com/sota/3d-point-cloud-classification-on-modelnet40?p=masked-autoencoders-for-point-cloud-self)
