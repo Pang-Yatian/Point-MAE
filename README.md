@@ -106,12 +106,12 @@ Our codes are built upon [Point-BERT](https://github.com/lulutang0608/Point-BERT
 ## Reference
 
 ```
-@misc{pang2022masked,
-    title={Masked Autoencoders for Point Cloud Self-supervised Learning},
-    author={Yatian Pang and Wenxiao Wang and Francis E. H. Tay and Wei Liu and Yonghong Tian and Li Yuan},
-    year={2022},
-    eprint={2203.06604},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@inproceedings{pang2022masked,
+  title={Masked autoencoders for point cloud self-supervised learning},
+  author={Pang, Yatian and Wang, Wenxiao and Tay, Francis EH and Liu, Wei and Tian, Yonghong and Yuan, Li},
+  booktitle={Computer Vision--ECCV 2022: 17th European Conference, Tel Aviv, Israel, October 23--27, 2022, Proceedings, Part II},
+  pages={604--621},
+  year={2022},
+  organization={Springer}
 }
 ```
