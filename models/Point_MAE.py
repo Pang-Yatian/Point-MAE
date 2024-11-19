@@ -1,3 +1,4 @@
+from IPython import embed
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -396,25 +397,104 @@ class Point_MAE(nn.Module):
         x_rec = self.MAE_decoder(x_full, pos_full, N)
 
         B, M, C = x_rec.shape
-        rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2).reshape(B * M, -1, 3)  # B M 1024
 
-        gt_points = neighborhood[mask].reshape(B*M,-1,3)
-        loss1 = self.loss_func(rebuild_points, gt_points)
+        rebuild_points = self.increase_dim(x_rec.transpose(1, 2)).transpose(1, 2)  # B M 1024
+        gt_points = neighborhood[mask]
 
-        if vis: #visualization
-            vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
-            full_vis = vis_points + center[~mask].unsqueeze(1)
-            full_rebuild = rebuild_points + center[mask].unsqueeze(1)
-            full = torch.cat([full_vis, full_rebuild], dim=0)
-            # full_points = torch.cat([rebuild_points,vis_points], dim=0)
-            full_center = torch.cat([center[mask], center[~mask]], dim=0)
-            # full = full_points + full_center.unsqueeze(1)
-            ret2 = full_vis.reshape(-1, 3).unsqueeze(0)
-            ret1 = full.reshape(-1, 3).unsqueeze(0)
-            # return ret1, ret2
-            return ret1, ret2, full_center
-        else:
-            return loss1
+        rebuild_points = rebuild_points.reshape(B, M, -1, 3)
+        gt_points = gt_points.reshape(B, M, -1, 3)
+
+        loss = self.loss_func(rebuild_points.reshape(B*M,-1,3), gt_points.reshape(B*M,-1,3))
+
+        shifted_neighborhood = neighborhood + center.unsqueeze(2)
+        visible_points = shifted_neighborhood[~mask].reshape(B, -1, neighborhood.shape[2], 3)
+        masked_points = shifted_neighborhood[mask].reshape(B, -1, neighborhood.shape[2], 3)
+        masked_centers = center[mask].reshape(center.shape[0], -1, 3)
+        reconstructed_points = rebuild_points + masked_centers.unsqueeze(2)
+
+        return loss, visible_points, masked_points, reconstructed_points
+        # if vis: #visualization
+        #     vis_points = neighborhood[~mask].reshape(B * (self.num_group - M), -1, 3)
+        #     full_vis = vis_points + center[~mask].unsqueeze(1)
+        #     full_rebuild = rebuild_points + center[mask].unsqueeze(1)
+        #     full = torch.cat([full_vis, full_rebuild], dim=0)
+        #     # full_points = torch.cat([rebuild_points,vis_points], dim=0)
+        #     full_center = torch.cat([center[mask], center[~mask]], dim=0)
+        #     # full = full_points + full_center.unsqueeze(1)
+        #     ret2 = full_vis.reshape(-1, 3).unsqueeze(0)
+        #     ret1 = full.reshape(-1, 3).unsqueeze(0)
+        #     # return ret1, ret2
+        #     return ret1, ret2, full_center
+        # else:
+        #     return loss, gt_points, rebuild_points
+
+
+class PositionalEmbedding(nn.Module):
+    def __init__(self, 
+                 input_dim=3,
+                 hidden_dim=128,
+                 embedding_dim=384,
+                 ):
+        super().__init__()
+        self.pos_embed = nn.Sequential(
+            nn.Linear(input_dim, hidden_dim),
+            nn.GELU(),
+            nn.Linear(hidden_dim, embedding_dim)
+        )
+
+    def forward(self, x):
+        return self.pos_embed(x)
+
+
+class PointSegmentationHead(nn.Module):
+    def __init__(self, 
+                 num_classes=13,
+                 trans_dim=96,
+                 context_tokens=16,
+                 global_feature_dim=768,
+                 trans_depth=2,
+                 num_heads=6,
+                 ):
+        super().__init__()
+
+        self.context_tokens = context_tokens
+        self.trans_dim = trans_dim
+
+        self.pos_embed = PositionalEmbedding(
+            hidden_dim=48,
+            embedding_dim=trans_dim
+        )
+        self.point_tokenizer = nn.Linear(3, trans_dim)
+
+        gdim = context_tokens * trans_dim
+        self.global_reproject = PositionalEmbedding(
+            input_dim=global_feature_dim,
+            hidden_dim=gdim // 2,
+            embedding_dim=gdim
+        )
+
+        self.global_pos = nn.Parameter(torch.randn(context_tokens, trans_dim))
+
+        self.transformer = TransformerEncoder(
+            embed_dim=trans_dim,
+            depth=trans_depth,
+            num_heads=num_heads,
+        )
+
+        self.out = nn.Linear(trans_dim, num_classes)
+
+    def forward(self, points, global_feature):
+        point_tokens = self.point_tokenizer(points)
+        point_pos = self.pos_embed(points)
+        global_tokens = self.global_reproject(global_feature).reshape(-1, self.context_tokens, self.trans_dim)
+        global_pos = self.global_pos.unsqueeze(0).expand(global_tokens.size(0), -1, -1)
+        all_tokens = torch.cat([point_tokens, global_tokens], dim=1)
+        all_pos = torch.cat([point_pos, global_pos], dim=1)
+        all_tokens = self.transformer(all_tokens, all_pos)
+        transformed_point_tokens = all_tokens[:, :points.size(1)]
+        point_logits = self.out(transformed_point_tokens)
+        return point_logits
+
 
 # finetune model
 @MODELS.register_module()
@@ -456,17 +536,17 @@ class PointTransformer(nn.Module):
 
         self.norm = nn.LayerNorm(self.trans_dim)
 
-        self.cls_head_finetune = nn.Sequential(
-                nn.Linear(self.trans_dim * 2, 256),
-                nn.BatchNorm1d(256),
-                nn.ReLU(inplace=True),
-                nn.Dropout(0.5),
-                nn.Linear(256, 256),
-                nn.BatchNorm1d(256),
-                nn.ReLU(inplace=True),
-                nn.Dropout(0.5),
-                nn.Linear(256, self.cls_dim)
-            )
+        # self.cls_head_finetune = nn.Sequential(
+        #         nn.Linear(self.trans_dim * 2, 256),
+        #         nn.BatchNorm1d(256),
+        #         nn.ReLU(inplace=True),
+        #         nn.Dropout(0.5),
+        #         nn.Linear(256, 256),
+        #         nn.BatchNorm1d(256),
+        #         nn.ReLU(inplace=True),
+        #         nn.Dropout(0.5),
+        #         nn.Linear(256, self.cls_dim)
+        #     )
 
         self.build_loss_func()
 
@@ -532,17 +612,14 @@ class PointTransformer(nn.Module):
 
         neighborhood, center = self.group_divider(pts)
         group_input_tokens = self.encoder(neighborhood)  # B G N
-
         cls_tokens = self.cls_token.expand(group_input_tokens.size(0), -1, -1)
         cls_pos = self.cls_pos.expand(group_input_tokens.size(0), -1, -1)
-
         pos = self.pos_embed(center)
-
         x = torch.cat((cls_tokens, group_input_tokens), dim=1)
         pos = torch.cat((cls_pos, pos), dim=1)
         # transformer
         x = self.blocks(x, pos)
         x = self.norm(x)
+
         concat_f = torch.cat([x[:, 0], x[:, 1:].max(1)[0]], dim=-1)
-        ret = self.cls_head_finetune(concat_f)
-        return ret
+        return concat_f
