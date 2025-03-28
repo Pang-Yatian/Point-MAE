@@ -22,6 +22,27 @@ torchvision;
 pip install -r requirements.txt
 ```
 
+For Linux Kernal 6.0 or above (e.g. Ubuntu 24), please run the following command before installing Chamfer Distance:
+```
+sudo apt install gcc-10 g++-10
+
+su
+cd /usr/local/src
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.tar.xz
+tar -xf linux-5.4.tar.xz && cd linux-5.4
+make headers_install INSTALL_HDR_PATH=/usr/local/linux-headers-5.4
+
+export CC=/usr/bin/gcc-10
+export CXX=/usr/bin/g++-10
+export CFLAGS="-I/usr/local/linux-headers-5.4/include"
+export CPPFLAGS="-I/usr/local/linux-headers-5.4/include"
+```
+
+In `extensions/chamfer_dist/setup.py`, in the `extra_compile_args` field, pass the correct header path to nvcc by adding the following line as the second element of `ext_modules`:
+```
+extra_compile_args={"nvcc": ['--system-include=/usr/local/linux-headers-5.4/include']}
+```
+
 ```
 # Chamfer Distance & emd
 cd ./extensions/chamfer_dist
