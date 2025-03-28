@@ -22,7 +22,7 @@ torchvision;
 pip install -r requirements.txt
 ```
 
-For Linux Kernal 6.0 or above (e.g. Ubuntu 24), please run the following command before installing Chamfer Distance:
+For Linux Kernel 6.0 or above (e.g. Ubuntu 24), please run the following command before installing Chamfer Distance:
 ```
 sudo apt install gcc-10 g++-10
 
