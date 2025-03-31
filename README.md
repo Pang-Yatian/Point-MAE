@@ -21,8 +21,13 @@ torchvision;
 ```
 pip install -r requirements.txt
 ```
+<details>
+<summary> For Linux Kernel 6.0 or above (e.g. Ubuntu 24)
+</summary>
+ 
+Solution from [Sam Cheung](https://github.com/deemoe404).
 
-For Linux Kernel 6.0 or above (e.g. Ubuntu 24), please run the following command before installing Chamfer Distance:
+Please run the following command before installing Chamfer Distance:
 ```
 sudo apt install gcc-10 g++-10
 
@@ -42,6 +47,8 @@ In `extensions/chamfer_dist/setup.py`, in the `extra_compile_args` field, pass t
 ```
 extra_compile_args={"nvcc": ['--system-include=/usr/local/linux-headers-5.4/include']}
 ```
+
+</details>
 
 ```
 # Chamfer Distance & emd
